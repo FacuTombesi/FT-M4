@@ -2,10 +2,14 @@ const { Sequelize, Op } = require('sequelize');
 const modelCharacter = require('./models/Character.js');
 const modelAbility = require('./models/Ability.js');
 const modelRole = require('./models/Role.js');
+// require("dotenv").config()
 
-const db = new Sequelize('postgres://franco:12345@localhost:5432/henry_sequelize', {
-  logging: false,
-});
+// const { DB_USER, DB_PASSWORD, DB_HOST } = process.env
+const DB_USER = "postgres"
+const DB_PASSWORD = "admin"
+const DB_HOST = "localhost:5432"
+
+const db = new Sequelize(`postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/henry_sequelize`, { logging: false })
 
 modelCharacter(db);
 modelAbility(db);
