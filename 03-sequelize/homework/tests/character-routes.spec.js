@@ -49,13 +49,13 @@ describe('Character Routes', () => {
       const p2Character = Character.create({code: 'TWO', name: 'Second', hp: 135.0, mana: 40.0, race: 'Machine', age: 20});
       const p3Character = Character.create({code: 'THREE', name: 'Third', hp: 110.0, mana: 110.0, race: 'Human', age: 23});
       const [p1, p2, p3] = await Promise.all([p1Character, p2Character, p3Character]);
-      // await Promise.all([
-      //   p1.createRole({name: 'Tank'}),
-      //   p1.createRole({name: 'Top'}),
-      //   p2.createRole({name: 'Jungle'}),
-      //   p3.createRole({name: 'Mid'}),
-      //   p3.createRole({name: 'Support'})
-      // ]);
+      await Promise.all([
+        p1.createRole({name: 'Tank'}),
+        p1.createRole({name: 'Top'}),
+        p2.createRole({name: 'Jungle'}),
+        p3.createRole({name: 'Mid'}),
+        p3.createRole({name: 'Support'})
+      ]);
     })
 
     describe('Parte UNO', () => {
@@ -104,7 +104,7 @@ describe('Character Routes', () => {
     })
 
     describe('Parte DOS', () => {
-      xit('should list all characters that match with the race and the age filters', async () => {
+      it('should list all characters that match with the race and the age filters', async () => {
         await Character.create({code: 'FOUR', name: 'Fourth', hp: 48.0, mana: 65.0, age: 27});
         const res = await request(app).get('/character?race=Human&age=27');
         expect(res.statusCode).toBe(200);
@@ -113,7 +113,7 @@ describe('Character Routes', () => {
         ])
       })
   
-      xit('should list all characters with less than 25 years', async () => {
+      it('should list all characters with less than 25 years', async () => {
         const res = await request(app).get('/character/young');
         expect(res.statusCode).toBe(200);
         expect(res.body).toEqual([
@@ -122,7 +122,7 @@ describe('Character Routes', () => {
         ])
       })
   
-      xit('should update attribute wich are null with value passed by query', async () => {
+      it('should update attribute wich are null with value passed by query', async () => {
         const five = Character.create({code: 'FIVE', name: 'Fifth', hp: 15.0, mana: 500.0});
         const six = Character.create({code: 'SIX', name: 'Sixth', hp: 305.0, mana: 23.0, age: 35});
         const seven = Character.create({code: 'SEVEN', name: 'Seventh', hp: 305.0, mana: 23.0});
@@ -137,12 +137,12 @@ describe('Character Routes', () => {
         expect(res.text).toBe('Personajes actualizados');
       })
   
-      xit('should return the year joined with the phrase \'years old\'', async () => {
+      it('should return the year joined with the phrase \'years old\'', async () => {
         const characterOne = await Character.findByPk('ONE');
         expect(characterOne.age).toBe('27 years old');
       })
   
-      xit('should add the abilities to the character', async () => {
+      it('should add the abilities to the character', async () => {
         await request(app)
                 .put('/character/addAbilities')
                 .send({
@@ -161,7 +161,7 @@ describe('Character Routes', () => {
         ]))
       })
   
-      xit('should return all the characters with their roles associated', async () => {
+      it('should return all the characters with their roles associated', async () => {
         const res = await request(app).get('/character/roles/ONE');
         expect(res.body.name).toBe('First');
         expect(res.body.Roles).toEqual([

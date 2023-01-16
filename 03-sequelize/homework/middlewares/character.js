@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { Op, Character, Role } = require('../db');
+const { Op, Character, Role, Ability } = require('../db');
 const router = Router();
 
 // --------------------------------- CONTROLLERS ---------------------------------
@@ -53,16 +53,23 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
     // VERSIÓN TODO EN UNO
-    const { race } = req.query
+    const { race, age } = req.query
     // const attributes = Object.keys(req.query) // EXTRA => Si el array attributes tiene algo, muestra sólo lo que tiene
+    
+    // EXTRA
+    const statement = {} // Guardo en statement un objeto vacío que va a reemplazar el "where" en el findAll()
+    if (req.query.race || req.query.age){ // Si tengo "race" o "age"...
+        if (req.query.race) statement["where"] = { race } // Si lo que recibe por query es "race", el statement pasa a ser { where: { race } }
+        if (req.query.age) statement["where"] = { ...age } // Si lo que recibe por query es "age", devuelve lo que ya tiene y le agrega "age"
+    }
+    else if (Object.keys(req.query).length) statement["attributes"] = Object.keys(req.query) // Si el query está vacío, es decir, no recibe nada, el statement de findAll pasa a ser { attributes: { req.query } }
+
     try {
         // Versión corta sin repetir código
-        const results = race 
-            ? await Character.findAll({ where: { race } }) 
-            : await Character.findAll(/* { attributes EXTRA => Muestra los atributos que se le pasan }*/)
+        const results = await Character.findAll(statement) 
         return res.status(200).json(results)
 
-        // Versión larga repitiendo código
+        // Versión larga repitiendo código (sin EXTRA)
         // if (race) {
         //     // Si tengo raza...
         //     const results = await Character.findAll({ where: { race } })
@@ -89,6 +96,15 @@ router.get("/", async (req, res) => {
     // }
 })
 
+router.get("/young", async (req, res) => {
+    try {
+        const results = await Character.findAll({ where: { age: { [Op.lt]: 25 } } }) // [Op.lt] => lt = "less than"
+        res.status(200).json(results)
+    }   catch (error) {
+        res.status(404).send(error.message)
+    }
+})
+
 router.get("/:code", async (req, res) => {
     // VERSIÓN TODO EN UNO
     const { code } = req.params
@@ -108,6 +124,39 @@ router.get("/:code", async (req, res) => {
     // }   catch (error) {
     //     res.status(404).json({ error: error.message })
     // }
+})
+
+router.put("/:attribute", async (req, res) => {
+    // Guardo el atributo y el valor
+    const { attribute } = req.params 
+    const { value } = req.query
+    await Character.update( // .update() modifica el modelo, por lo tanto modifica el atributo pedido de todos los elementos de la tabla
+        { [attribute]: value }, 
+        { where: { [attribute]: null } }
+    )
+    res.status(200).send("Personajes actualizados")
+})
+
+router.put("/addAbilities", async (req, res) => {
+    const { codeCharacter, abilities } = req.body
+    const characterAbilities = await Character.findByPk(codeCharacter)
+    const newAbilities = await Ability.bulkCreate(abilities) // bulkCreate() es un create() en masa, devuelve un array de lo que haya en lo que se le pasa por parámetro
+    await characterAbilities.addAbilities(newAbilities)
+    res.status(200).send("Habilidades creadas")
+})
+
+router.get("/roles/:code", async (req, res) => {
+    const { code } = req.params
+    try {
+        const character = await Character.findByPk(code, { // Le paso el PK y le incluyo la info de los roles
+            include: {
+                Model: Role
+            }
+        })
+        res.status(200).json(character)
+    }   catch (error) {
+        res.status(404).send(error.message)
+    }
 })
 
 
